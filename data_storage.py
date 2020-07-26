@@ -1,9 +1,22 @@
 import pandas as pd
+import os, pickle
 
 class GenericSeriesStorage():
     
     def __init__(self):
-        self.cache = {}
+        self.cache_filename = self.__class__.__name__ + '.cache'
+        if not os.path.exists(self.cache_filename):
+            self.cache = {}
+        else:
+            self.load()
+    
+    def load(self):
+        with open(self.cache_filename, 'rb') as fp:
+            self.cache =  pickle.load(fp)
+    
+    def save(self):
+        with open(self.cache_filename, 'wb') as fp:
+            pickle.dump(self.cache, fp)
     
     def get_stock_price(self, symbols, start, end):
         '''
@@ -32,6 +45,7 @@ class GenericSeriesStorage():
                 data_series = new_data[symbol].reindex(dates)
                 data[symbol] = data_series
                 self.cache[symbol] = data_series
+            self.save()
         else:
             print ('All data cached')
         
