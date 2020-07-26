@@ -49,7 +49,7 @@ class GenericSeriesStorage():
         else:
             print ('All data cached')
         
-        return data
+        return data.dropna()
     
     def get_new_data(self, items, start, end):
         raise Exception('Must be implemented in overloaded class')
