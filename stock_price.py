@@ -2,6 +2,7 @@ import yfinance as yf
 import pandas as pd
 from data_storage import GenericSeriesStorage
 from datetime import datetime, timedelta
+import math
 
 class StockPrice(GenericSeriesStorage):
     
@@ -15,9 +16,10 @@ class StockPrice(GenericSeriesStorage):
         # end needs delta added to it
         start = datetime.strptime(start, "%Y-%m-%d")
         end = datetime.strptime(end, "%Y-%m-%d")
-        prices = self.get_stock_price(items, start, end + timedelta(delta))
+        range = pd.date_range(pd.Timestamp(start), pd.Timestamp(end))
+        prices = self.get_stock_price(items, start, end + timedelta(delta + math.ceil(delta / 7) * 3))
        
-        return  prices.pct_change(delta).dropna()
+        return  prices.pct_change(delta).shift(-1 * delta).reindex(range).dropna()
 
 
 if __name__ ==  '__main__':

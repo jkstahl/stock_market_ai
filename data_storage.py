@@ -18,7 +18,7 @@ class GenericSeriesStorage():
         with open(self.cache_filename, 'wb') as fp:
             pickle.dump(self.cache, fp)
     
-    def get_stock_price(self, symbols, start, end):
+    def get_stock_price(self, symbols, start, end, dropna = True):
         '''
         Return pandas data frame where columns are the symbols and rows are dates
         
@@ -49,7 +49,8 @@ class GenericSeriesStorage():
         else:
             print ('All data cached')
         
-        return data.dropna()
+        if dropna:data = data.dropna()
+        return data
     
     def get_new_data(self, items, start, end):
         raise Exception('Must be implemented in overloaded class')
