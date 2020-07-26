@@ -29,7 +29,7 @@ class GenericSeriesStorage():
             new_data = self.get_new_data(need_to_get, start, end)
             for symbol in need_to_get:
                 print (symbol)
-                data_series = new_data[symbol]
+                data_series = new_data[symbol].reindex(dates)
                 data[symbol] = data_series
                 self.cache[symbol] = data_series
         else:
