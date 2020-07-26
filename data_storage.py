@@ -1,22 +1,17 @@
 import pandas as pd
-import os, pickle
+import os, pickle, shelve
 
 class GenericSeriesStorage():
     
     def __init__(self):
-        self.cache_filename = self.__class__.__name__ + '.cache'
-        if not os.path.exists(self.cache_filename):
-            self.cache = {}
-        else:
-            self.load()
-    
+        self.cache_filename = self.__class__.__name__ + '.db'
+        self.load()
+        
     def load(self):
-        with open(self.cache_filename, 'rb') as fp:
-            self.cache =  pickle.load(fp)
+        self.cache = shelve.open(self.cache_filename, writeback = True)
     
     def save(self):
-        with open(self.cache_filename, 'wb') as fp:
-            pickle.dump(self.cache, fp)
+        self.cache.sync()
     
     def get_stock_price(self, symbols, start, end, dropna = True):
         '''

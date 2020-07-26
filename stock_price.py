@@ -9,17 +9,17 @@ class StockPrice(GenericSeriesStorage):
     def get_new_data(self, items, start, end):
         return yf.download(items, start = start, end = end)['Adj Close']
     
-    def get_delta_increase(self, items, start, end, delta):
+    def get_delta_increase(self, items, start, end, delta, shift=True):
         '''
         For this date return the percent change delta days in the future.
         '''
         # end needs delta added to it
         start = datetime.strptime(start, "%Y-%m-%d")
         end = datetime.strptime(end, "%Y-%m-%d")
-        range = pd.date_range(pd.Timestamp(start), pd.Timestamp(end))
+        rang = pd.date_range(pd.Timestamp(start), pd.Timestamp(end))
         prices = self.get_stock_price(items, start, end + timedelta(delta + math.ceil(delta / 7) * 3))
-       
-        return  prices.pct_change(delta).shift(-1 * delta).reindex(range).dropna()
+        prices = prices.pct_change(delta).reindex(rang).dropna() if not shift else prices.pct_change(delta).shift(-1 * delta).reindex(rang).dropna()
+        return prices
 
 
 if __name__ ==  '__main__':
