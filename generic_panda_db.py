@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import sqlite3
-from astropy.io.misc.tests.test_pandas import pandas
 
 
 class generic_panda_db():
@@ -16,6 +15,9 @@ class generic_panda_db():
     
     def __get_db_filename__(self):
         return generic_panda_db.FILENAME
+    
+    def __get_key_columns__(self):
+        return generic_panda_db.KEY_COLUMNS
     
     def __initialize__(self):
         self.base_data = pd.DataFrame({}, columns=self.__get_key_columns__())
@@ -58,19 +60,12 @@ class generic_panda_db():
         if self.__verbose__():
             print (self.base_data)
     
-    def get_data(self):
-        rows = 20
-        cols = 10
-        return pd.DataFrame({'Col%d' % i: np.random.poisson(5, rows) for i in range(cols)})
-    
-    def __get_key_columns__(self):
-        return generic_panda_db.KEY_COLUMNS
-    
     # data must be a new dataframe
     def insert_data(self, data):
-        for col in self.__get_key_columns__():
-            if col not in data.columns:
-                raise Exception("key column %s not found in input data column %s" % (col, data.columns)) 
+        if data.index.names != self.base_data.index.names:
+            for col in self.__get_key_columns__():
+                if col not in data.columns:
+                    raise Exception("key column %s not found in input data column %s" % (col, data.columns)) 
         # Get all rows that currently exist in the data frame and set their data to the new data
         # add new columns to base data
         self.__set_keys__(data)
@@ -91,20 +86,16 @@ class generic_panda_db():
             print (self.base_data)
         self.save_base_data()
         # add the rest of the data
+    
+
         
     def delete_data(self):
         with sqlite3.connect(self.__get_db_filename__())  as con:
             con.execute('DROP table IF EXISTS %s;' % self.BASE_TABLE_NAME)
         self.__initialize__()
 
-    def get_column_less_than(self, column, value):
-        pass
-        
-    def get_column_greater_than(self, column, value):
-        pass
-        
-    def get_column_matching(self, column, ):
-        pass
+    def get_data(self):
+        return self.base_data.reset_index()
     
     def unit_test(self): 
         np.random.seed(1)
