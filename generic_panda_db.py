@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import sqlite3
-
+from ordered_set import OrderedSet
 
 class generic_panda_db():
     FILENAME = 'generic.db'
@@ -28,6 +28,8 @@ class generic_panda_db():
             try:
                 # read data from SQL to pandas dataframe. 
                 self.base_data = pd.read_sql_query('Select * from %s;' % generic_panda_db.BASE_TABLE_NAME, con) 
+                if 'Date' in self.base_data:
+                    self.base_data['Date'] =  pd.to_datetime(self.base_data['Date'], format='%Y-%m-%d %H:%M:%S')
                 self.__set_keys__()
                 #print (self.base_data.reset_index())
                 # show top 5 rows 
@@ -76,10 +78,10 @@ class generic_panda_db():
             if self.__verbose__():
                 print ('New cols ' + str(new_cols))
             # add new rows with nan
-            new_rows = list(set(data.index)-set(self.base_data.index))
+            new_rows = list(OrderedSet(data.index)-OrderedSet(self.base_data.index))
             if self.__verbose__():
                 print ('New rows ' + str(new_rows))
-            self.base_data = pd.concat([self.base_data, pd.DataFrame(index = new_rows,columns=new_cols)], sort=False)    
+            self.base_data = pd.concat([self.base_data, pd.DataFrame(index = new_rows,columns=new_cols)], sort=True)    
             self.base_data.update(data)
         
         if self.__verbose__():

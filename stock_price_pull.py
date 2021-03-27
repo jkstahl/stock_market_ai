@@ -4,6 +4,7 @@ from generic_pull import generic_pull
 from datetime import datetime, timedelta
 from generic_panda_db import generic_panda_db
 import stock_price
+from ordered_set import OrderedSet
 
 class stock_price_pull(generic_panda_db):
 
@@ -29,7 +30,9 @@ class stock_price_pull(generic_panda_db):
                 return False
         # check that all rows are in
         symbol = unindexed.loc[unindexed['Symbol'] == symbol]
-        pass
+        first_date = symbol.iloc[0]['Date']
+        last_date = symbol.iloc[-1]['Date']
+        return int(date_start.timestamp()) >= first_date and int(date_end.timestamp()) <= last_date
         
 
     def get_stock_price(self, symbols, start, end, dropna = True):
@@ -45,22 +48,29 @@ class stock_price_pull(generic_panda_db):
 
         start = datetime.strptime(start, "%Y-%m-%d")
         end = datetime.strptime(end, "%Y-%m-%d")
-        range = pd.date_range(pd.Timestamp(start), pd.Timestamp(end))
-        
+        daterange = pd.date_range(pd.Timestamp(start), pd.Timestamp(end))
         
         # check to see if the data is already in the database
+        
         symbols_to_get = []
+        '''
         for symbol in symbols:
+            temp_df = self.base_data.reset_index()
+            
+            new_dates = pd.DataFrame({'Date': daterange, 'Symbol': [symbol] * len(daterange)})
+            
             if not self.data_in(symbol, start, end, stock_price_pull.columns):
                 symbols_to_get.append(symbol)
+        '''
         #symbols_to_get = symbols
-        if len(symbols_to_get) > 0:
-            new_data = self.get_new_data(symbols_to_get, start, end)
+        if 1: #len(symbols_to_get) > 0:
+            new_data = self.get_new_data(symbols, start, end)
             
             for symbol in symbols:
-                data_series = new_data[symbol]
-                dates = [int(date.timestamp()) for date in data_series.index]
-                self.insert_data(pd.DataFrame({'Date': dates, 'Symbol': [symbol] * len(data_series), 'Price': data_series}))
+                nd = new_data[symbol].reindex(daterange, method='pad')
+                new_df = pd.DataFrame({'Price': nd, 'Symbol' : [symbol] * len(nd), 'Date': daterange})
+                
+                self.insert_data(new_df)
         else:
             print ('Data already exists. No need to repull.')
 
@@ -76,4 +86,5 @@ class stock_price_pull(generic_panda_db):
         
         
 if __name__ ==  '__main__':
-    stock_price_pull()
+    spp = stock_price_pull()
+    print (spp.base_data)
